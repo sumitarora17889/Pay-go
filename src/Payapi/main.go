@@ -1,42 +1,41 @@
 package main
 
 import (
+	"Payapi/components/utils"
 	"fmt"
 	"net/http"
 	"os"
-	"utils"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
+}
 func main() {
+	route := mux.NewRouter().StrictSlash(true)
 	//load server config
 	//Set listening port
 	//Allowed heads
 	//Allowed origin
 	//Allowed Methods
 	//security config
-	var err error
-	var environment = os.Args[1]
-	err = utils.LoadDefaultConfig(environment)
-	if err != nil {
-		fmt.Println("Could not load the configuration")
-		os.Exit(1)
-	}
-	allowedHeaders := handlers.AllowedHeaders([]string{"X-Requested-With"})
-	allowedOrigins := handlers.AllowedOrigins([]string{"*"})
-	allowedMethods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
-	router := mux.NewRouter().StrictSlash(true)
+	utils.InitRoutes(route)
 
-	port := utils.GetString("serviceListeningPort")
-	if port == "" {
-		fmt.Println("Port is not defined in configuration ...!!!")
+	erro := route.Walk(gorillaWalkFn)
+	if erro != nil {
+		fmt.Println(erro)
+	}
+	/*Set listening port, Allow heads, Allow origins, Allow Methods. Config stored in Config/serverconfig/serverconfig.go*/
+	err := utils.LoadserverConfig(route)
+	if err != "" {
+		fmt.Println(err)
 		os.Exit(1)
 	}
-	err = http.ListenAndServe(port, handlers.CORS(allowedHeaders, allowedOrigins, allowedMethods)(router))
-	if err != nil {
-		fmt.Println("Count not start the server because of following err " + err.Error())
-		return
-	}
+}
+
+func gorillaWalkFn(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+	path, err := route.GetPathTemplate()
+	fmt.Println(path)
+	return err
 }
