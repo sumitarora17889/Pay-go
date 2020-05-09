@@ -1,33 +1,25 @@
 package main
 
 import (
-	"Payapi/components/utils"
+	"Payapi/config/serverconfig"
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/gorilla/mux"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
-}
 func main() {
 	route := mux.NewRouter().StrictSlash(true)
-	//load server config
-	//Set listening port
-	//Allowed heads
-	//Allowed origin
-	//Allowed Methods
-	//security config
-	utils.InitRoutes(route)
+	/* Function to map service URLs to functionality */
+	serverconfig.InitRoutes(route)
 
+	/* Function to print all the URLs implemented by API*/
 	erro := route.Walk(gorillaWalkFn)
 	if erro != nil {
 		fmt.Println(erro)
 	}
-	/*Set listening port, Allow heads, Allow origins, Allow Methods. Config stored in Config/serverconfig/serverconfig.go*/
-	err := utils.LoadserverConfig(route)
+
+	err := serverconfig.LoadserverConfig(route) /*Set listening port, Allow heads, Allow origins, Allow Methods. Config stored in Config/serverconfig/serverconfig.go*/
 	if err != "" {
 		fmt.Println(err)
 		os.Exit(1)
